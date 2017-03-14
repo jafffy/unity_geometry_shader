@@ -47,42 +47,35 @@
 				return o;
 			}
 
-            [maxvertexcount(32)]
-            void geom(triangle v2g IN[3], inout TriangleStream<g2f> triStream)
+            [maxvertexcount(128)]
+            void geom(point v2g IN[1], inout TriangleStream<g2f> triStream)
             {
                 g2f OUT;
-                OUT.uv = (IN[0].uv + IN[1].uv + IN[2].uv) / 3;
+                OUT.uv = IN[0].uv; // (IN[0].uv + IN[1].uv + IN[2].uv) / 3;
 
-                OUT.vertex = IN[0].vertex;
-                triStream.Append(OUT);
+                float4 v = IN[0].vertex;
+                float4 v_prime = v + float4(0, -1, 0, 0);
 
-                OUT.vertex = IN[0].vertex + float4(1, 0, 0, 0);
-                triStream.Append(OUT);
+                const float Pi = 3.141592;
+                const int SEGMENT_COUNT = 32;
+                for ( int s = 0; s <= SEGMENT_COUNT; ++s ) {
+                    float t1 = (float) s / SEGMENT_COUNT * 2 * Pi;
+                    float t2 = (float) (s + 1) / SEGMENT_COUNT * 2 * Pi;
 
-                OUT.vertex = IN[0].vertex + float4(1, 1, 0, 0);
-                triStream.Append(OUT);
+                    OUT.vertex = v;
+                    triStream.Append(OUT);
+
+                    OUT.vertex = v_prime + float4(cos(t1), sin(t1), 0, 0);
+                    triStream.Append(OUT);
+
+                    OUT.vertex = v;
+                    triStream.Append(OUT);
+
+                    OUT.vertex = v_prime + float4(cos(t2), sin(t2), 0, 0);
+                    triStream.Append(OUT);
+                }
 
                 triStream.RestartStrip();
-                
-                OUT.vertex = IN[1].vertex;
-                triStream.Append(OUT);
-
-                OUT.vertex = IN[1].vertex + float4(1, 0, 0, 0);
-                triStream.Append(OUT);
-
-                OUT.vertex = IN[1].vertex + float4(1, 1, 0, 0);
-                triStream.Append(OUT);
-
-                triStream.RestartStrip();
-
-                OUT.vertex = IN[2].vertex;
-                triStream.Append(OUT);
-
-                OUT.vertex = IN[2].vertex + float4(1, 0, 0, 0);
-                triStream.Append(OUT);
-
-                OUT.vertex = IN[2].vertex + float4(1, 1, 0, 0);
-                triStream.Append(OUT);
             }
 			
 			fixed4 frag (g2f i) : SV_Target
